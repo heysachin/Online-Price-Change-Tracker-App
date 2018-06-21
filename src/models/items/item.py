@@ -1,24 +1,24 @@
 
 # Created by Sachin Dev on 01/06/18
+
+
 import re
 import uuid
-
 import requests
 from bs4 import BeautifulSoup
-
 from common.database import Database
 import models.items.constants as ItemConstants
 from models.stores.store import Store
 
 
 class Item(object):
-    def __init__(self, name, url, _id=None):
+    def __init__(self, name, url, price=None, _id=None):
         self.name = name
         self.url = url
         store = Store.find_by_url(url)
         self.tag_name = store.tag_name
         self.query = store.query
-        self.price = None
+        self.price = None if price is None else price
         self._id = uuid.uuid4().hex if _id is None else _id
 
     def __repr__(self):
@@ -39,13 +39,14 @@ class Item(object):
         return self.price
 
     def save_to_mongo(self):
-        Database.insert(ItemConstants.COLLECTION, self.json())
+        Database.update(ItemConstants.COLLECTION, {'_id':self._id}, self.json())
 
     def json(self):
         return {
             "_id": self._id,
             "name": self.name,
-            "url": self.url
+            "url": self.url,
+            "price": self.price
         }
 
     @classmethod

@@ -10,7 +10,7 @@ class UserNotExistsError(UserError):
     pass
 
 
-class Incorrect_Password(UserError):
+class IncorrectPasswordError(UserError):
     pass
 
 

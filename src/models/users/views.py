@@ -4,9 +4,9 @@
 
 from flask import Blueprint, request, render_template, session, url_for
 from werkzeug.utils import redirect
-from common.utils import Utils
 from models.users.user import User
 import models.users.errors as UserErrors
+import models.users.decorators as user_decorators
 
 user_blueprint = Blueprint('users',__name__)
 
@@ -15,7 +15,7 @@ user_blueprint = Blueprint('users',__name__)
 def login_user():
     if request.method == 'POST':
         email = request.form['email']
-        password = request.form['hashed']
+        password = request.form['password']
 
         try:
             if User.is_login_valid(email, password):
@@ -24,19 +24,13 @@ def login_user():
         except UserErrors.UserError as e:
             return e.message
 
-    return render_template("users/login.html")
-
-
-@user_blueprint.route('/check/<string:passd>')
-def passed_value(passd):
-    return " {} ".format(Utils.hash_password(passd))
-
+    return render_template("users/login.jinja2")
 
 @user_blueprint.route('/register', methods=['GET', 'POST'])
 def register_user():
     if request.method == 'POST':
         email = request.form['email']
-        password = request.form['hashed']
+        password = request.form['password']
 
         try:
             if User.register_user(email, password):
@@ -45,19 +39,22 @@ def register_user():
         except UserErrors.UserError as e:
             return e.message
 
-    return render_template("users/register.html")
+    return render_template("users/register.jinja2")
 
 
 @user_blueprint.route('/alerts')
 def user_alerts():
-    return "This is alerts page!!"
+    user = User.find_by_email(session['email'])
+    return render_template("users/alerts.jinja2", alerts=user.get_alerts())
 
 
 @user_blueprint.route('/logout')
 def logout_user():
-    pass
+    session['email'] = None
+    return redirect(url_for('home'))
 
 
 @user_blueprint.route('/check_alerts/<string:user_id>')
+@user_decorators.requires_login
 def check_user_alerts(user_id):
     pass

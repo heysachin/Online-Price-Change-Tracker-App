@@ -26,9 +26,16 @@ class Store(object):
             "query": self.query
          }
 
+    def delete(self):
+        Database.remove(StoreConstants.COLLECTION, {'_id': self._id})
+
+    @classmethod
+    def all(cls):
+        return [cls(**elem) for elem in Database.find(StoreConstants.COLLECTION, {})]
+
     @classmethod
     def get_by_id(cls, id):
-        return cls(**Database.find_one(StoreConstants.COLLECTION))
+        return cls(**Database.find_one(StoreConstants.COLLECTION,{"_id": id}))
 
     def save_to_mongo(self):
         Database.insert(StoreConstants.COLLECTION,self.json())
@@ -48,7 +55,7 @@ class Store(object):
         :param url: The item's url
         :return: a Store, or raises a StoreNotFoundException if none found
         """
-        for i in range(0,len(url)+1):
+        for i in range(0, len(url)+1):
             try:
                 store = cls.get_by_url_prefix(url[:i])
                 return store

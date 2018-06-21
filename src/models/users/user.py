@@ -4,6 +4,8 @@ import uuid
 from common.database import Database
 from common.utils import Utils
 import models.users.errors as UserErrors
+import models.users.constants as UserConstants
+from models.alerts.alert import Alert
 
 
 class User(object):
@@ -14,6 +16,10 @@ class User(object):
 
     def __repr__(self):
         return "<User {}>".format(self.email)
+
+    @classmethod
+    def find_by_email(cls, email):
+        return cls(**Database.find_one(UserConstants.COLLECTION, {'email': email}))
 
     @staticmethod
     def is_login_valid(email, password):
@@ -28,10 +34,10 @@ class User(object):
         user_data = Database.find_one("users", {"email": email})  # Password in sha512 -> pbkdf2_sha512
         if user_data is None:
             # Tell user that their email doesnt exist
-            raise UserErrors.UserError("User Doesn't Exist.")
+            raise UserErrors.UserNotExistsError("User Doesn't Exist.")
         if not Utils.check_hashed_password(password, user_data['password']):
             # Tell user that the password is wrong
-            raise UserErrors.UserError("Password is wrong")
+            raise UserErrors.IncorrectPasswordError("Password is wrong")
 
         return True
 
@@ -63,3 +69,6 @@ class User(object):
             "email": self.email,
             "password": self.password
         }
+
+    def get_alerts(self):
+        return Alert.find_by_user_email(self.email)
